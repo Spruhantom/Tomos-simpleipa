@@ -1,23 +1,11 @@
-# API and dashboard foundation
+# API and dashboard
 
-## API
+The API exposes `GET /health`, `POST /api/v1/auth/login`, and authenticated user/group list and create endpoints. Administrator login uses a configured username, an Argon2id password hash and a 32+ character JWT signing secret. The API issues 15-minute signed bearer tokens and validates signature, issuer, audience and expiry.
 
-The FastAPI application is created by `simpleipa.api:create_app`. It exposes:
+Directory access is provider-based. When `SIMPLEIPA_FREEIPA_URL` is configured, the application loads the FreeIPA adapter; otherwise management calls fail closed with HTTP 503. The adapter uses Kerberos SPNEGO with mutual authentication and verified HTTPS. See [FreeIPA adapter and authentication](FREEIPA-ADAPTER.md).
 
-- `GET /health` — unauthenticated process health check
-- `GET /api/v1/users` and `POST /api/v1/users`
-- `GET /api/v1/groups` and `POST /api/v1/groups`
+The React/Vite dashboard provides administrator sign-in, read-only listings, and user/group creation forms. Tokens are held in page memory only and are not persisted in browser storage. The dashboard does not expose password changes, group membership assignment, DNS, certificate or client-enrolment operations yet.
 
-Management routes require a bearer token configured in `SIMPLEIPA_API_TOKEN`. If no token is configured, management requests fail closed with HTTP 503. Invalid tokens receive HTTP 401. Duplicate usernames/group names receive HTTP 409 and invalid payloads receive HTTP 422.
+For API development, install `python -m pip install -e ".[test,freeipa]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
 
-The default provider is intentionally unconfigured and returns HTTP 503. `MemoryDirectory` is a test-only adapter used by unit tests; it is not selected by the application default and is not persistent. No FreeIPA writes are implemented yet. A production adapter must use supported FreeIPA interfaces, narrowly scoped service credentials, audit events and explicit authorization.
-
-## Dashboard
-
-The React/Vite dashboard currently provides a connection panel and read-only user/group listings. Set `VITE_SIMPLEIPA_API_URL` to the API origin when running the dashboard separately. The API must be configured with an administrator token; the token is held only in the current page's component state and is not persisted.
-
-The dashboard does not yet create, edit or delete identities. Production deployment still needs a proper administrator sign-in/session flow, CSRF protections where cookie sessions are used, TLS, rate limiting, audit logging and deployment hardening.
-
-## Development
-
-API dependencies are installed with the project. Dashboard dependencies are installed from `dashboard/package.json` using npm.
+This is an initial single-administrator authentication model, not yet a multi-user RBAC/SSO system. Deploy only behind TLS, add login rate limiting at the reverse proxy, protect secrets with a host secret manager, and complete production audit logging before wider deployment.
