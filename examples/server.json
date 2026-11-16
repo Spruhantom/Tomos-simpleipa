@@ -1,0 +1,13 @@
+{
+  "role": "server",
+  "platform": "rocky",
+  "domain": "ipa.example.com",
+  "features": [
+    "users_and_groups",
+    "dns",
+    "certificates",
+    "linux_clients",
+    "ssh_keys",
+    "sudo_rules"
+  ]
+}
