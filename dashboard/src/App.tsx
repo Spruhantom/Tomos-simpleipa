@@ -32,6 +32,7 @@ export default function App() {
   async function submitCreate(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=new FormData(event.currentTarget);setBusy(true);try{
     if(tab==="users")await request("users",{method:"POST",body:JSON.stringify({username:form.get("username"),given_name:form.get("given_name"),family_name:form.get("family_name"),email:form.get("email")||null})});
     else if(tab==="groups")await request("groups",{method:"POST",body:JSON.stringify({name:form.get("name"),description:form.get("description")||null})});
+    else if(tab==="certificates")await request("certificates/requests",{method:"POST",body:JSON.stringify({principal:form.get("principal"),csr:form.get("csr")})});
     else if(!zones.length) {const zone=await request<DNSZone>("dns/zones",{method:"POST",body:JSON.stringify({name:form.get("zone")})});setSelectedZone(zone.name);}
     else await request("dns/zones/"+encodeURIComponent(selectedZone)+"/records",{method:"POST",body:JSON.stringify({name:form.get("record_name"),record_type:form.get("record_type"),value:form.get("value")})});
     setNotice(tab==="certificates"?"Certificate request submitted to FreeIPA.":tab==="dns"?(zones.length?"DNS record created.":"DNS zone created."):"Directory entry created.");setShowCreate(false);await refresh();
