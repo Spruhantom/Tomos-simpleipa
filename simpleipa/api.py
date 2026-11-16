@@ -1,18 +1,24 @@
-"""Versioned management API. Directory operations are delegated to a provider.
-
-The default provider is deliberately unavailable: the API never silently stores
-identities in process memory or pretends to be connected to FreeIPA.
-"""
+"""Authenticated management API with a fail-closed FreeIPA provider boundary."""
 from __future__ import annotations
 
-import hmac
 import os
-from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
 
+import jwt
 from fastapi import Depends, FastAPI, Header, HTTPException, status
+from pwdlib import PasswordHash
 from pydantic import BaseModel, Field
+
+from .freeipa import FreeIPADirectory
+
+
+password_hasher = PasswordHash.recommended()
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=1, max_length=1024)
 
 
 class UserCreate(BaseModel):
@@ -20,7 +26,6 @@ class UserCreate(BaseModel):
     given_name: str = Field(min_length=1, max_length=128)
     family_name: str = Field(min_length=1, max_length=128)
     email: str | None = Field(default=None, max_length=254)
-    groups: list[str] = Field(default_factory=list, max_length=100)
 
 
 class UserRecord(UserCreate):
@@ -37,7 +42,7 @@ class GroupRecord(GroupCreate):
 
 
 class DirectoryError(Exception):
-    """Base class for directory adapter errors."""
+    pass
 
 
 class DirectoryUnavailable(DirectoryError):
@@ -56,8 +61,6 @@ class DirectoryProvider(Protocol):
 
 
 class UnconfiguredDirectory:
-    """Fail-closed placeholder until a supported FreeIPA adapter is configured."""
-
     def _unavailable(self):
         raise DirectoryUnavailable("No FreeIPA directory provider is configured")
 
@@ -75,7 +78,7 @@ class UnconfiguredDirectory:
 
 
 class MemoryDirectory:
-    """Test-only provider; never selected by the production app factory."""
+    """In-memory provider for tests only; never selected in production."""
 
     def __init__(self):
         self.users: dict[str, UserRecord] = {}
@@ -102,32 +105,50 @@ class MemoryDirectory:
         return record
 
 
-@dataclass(frozen=True)
-class Principal:
+class Principal(BaseModel):
     subject: str
 
 
-def require_admin(authorization: str | None = Header(default=None)) -> Principal:
-    configured = os.getenv("SIMPLEIPA_API_TOKEN")
-    if not configured:
+def _jwt_settings() -> tuple[str, str]:
+    secret = os.getenv("SIMPLEIPA_JWT_SECRET", "")
+    username = os.getenv("SIMPLEIPA_ADMIN_USERNAME", "")
+    password_hash = os.getenv("SIMPLEIPA_ADMIN_PASSWORD_HASH", "")
+    if len(secret) < 32 or not username or not password_hash:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="API authentication is not configured",
+            status_code=503,
+            detail="Administrator authentication is not configured securely",
         )
-    scheme, _, supplied = (authorization or "").partition(" ")
-    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, configured):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token")
-    return Principal(subject="configured-api-admin")
+    return secret, username
+
+
+def require_admin(authorization: str | None = Header(default=None)) -> Principal:
+    secret, _ = _jwt_settings()
+    scheme, _, token = (authorization or "").partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="Bearer token required")
+    try:
+        claims = jwt.decode(
+            token, secret, algorithms=["HS256"],
+            issuer="simpleipa", audience="simpleipa-admin",
+            options={"require": ["exp", "iat", "sub", "iss", "aud"]},
+        )
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=401, detail="Invalid or expired session") from exc
+    return Principal(subject=str(claims["sub"]))
 
 
 def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
     app = FastAPI(
         title="SimpleIPA Management API",
-        version="0.1.0",
-        description="Versioned management API; directory operations require an explicit provider.",
+        version="0.2.0",
+        description="Authenticated API; directory changes use a configured FreeIPA provider.",
     )
-    provider = directory or UnconfiguredDirectory()
-    app.state.directory = provider
+    if directory is not None:
+        app.state.directory = directory
+    elif os.getenv("SIMPLEIPA_FREEIPA_URL"):
+        app.state.directory = FreeIPADirectory.from_environment()
+    else:
+        app.state.directory = UnconfiguredDirectory()
 
     def get_directory() -> DirectoryProvider:
         return app.state.directory
@@ -142,6 +163,22 @@ def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
     @app.get("/health")
     def health():
         return {"status": "ok", "service": "simpleipa-api"}
+
+    @app.post("/api/v1/auth/login")
+    def login(data: LoginRequest):
+        secret, username = _jwt_settings()
+        stored_hash = os.getenv("SIMPLEIPA_ADMIN_PASSWORD_HASH", "")
+        if data.username != username or not password_hasher.verify(data.password, stored_hash):
+            # Avoid disclosing whether the username or password was incorrect.
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        token = jwt.encode(
+            {"sub": username, "iss": "simpleipa", "aud": "simpleipa-admin",
+             "iat": now, "exp": now + timedelta(minutes=15)},
+            secret, algorithm="HS256",
+        )
+        return {"access_token": token, "token_type": "bearer", "expires_in": 900}
 
     @app.get("/api/v1/users", response_model=list[UserRecord])
     def list_users(_: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
