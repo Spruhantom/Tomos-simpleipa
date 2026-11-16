@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 
 type User = { id: string; username: string; given_name: string; family_name: string; email?: string | null };
 type Group = { id: string; name: string; description?: string | null };
@@ -39,7 +40,7 @@ export default function App() {
     } finally { setBusy(false); }
   }
 
-  async function signIn(event: React.FormEvent<HTMLFormElement>) {
+  async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true);
     try {
       const response = await fetch(`${API}/api/v1/auth/login`, {
