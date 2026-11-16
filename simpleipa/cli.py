@@ -103,7 +103,7 @@ def main(argv=None):
             if args.client_command == "preflight":
                 print("Preflight complete. No system changes were made.")
                 return 0
-            print("\\nThe FreeIPA client packages will be installed and the upstream interactive enrolment will start.")
+            print("\nThe FreeIPA client packages will be installed and the upstream interactive enrolment will start.")
             print("Enter enrolment credentials only in the FreeIPA installer prompt; SimpleIPA does not collect or save them.")
             answer = input("Continue with client package installation and enrolment? [y/N] ").strip().lower()
             if answer not in {"y", "yes"}:
