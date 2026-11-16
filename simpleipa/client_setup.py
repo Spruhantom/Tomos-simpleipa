@@ -6,7 +6,6 @@ hands credentials directly to the upstream interactive installer.
 """
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import socket
@@ -47,6 +46,8 @@ def validate_config(config: ClientConfig) -> None:
         raise ValueError("Hostname, server and domain must be lowercase")
     if config.hostname != config.domain and not config.hostname.endswith("." + config.domain):
         raise ValueError("Client hostname must belong to the selected identity domain")
+    if config.server != config.domain and not config.server.endswith("." + config.domain):
+        raise ValueError("FreeIPA server hostname must belong to the selected identity domain")
     if not re.fullmatch(r"[A-Z0-9](?:[A-Z0-9.-]*[A-Z0-9])?", config.realm) or "." not in config.realm:
         raise ValueError("Kerberos realm must be an uppercase DNS-style realm")
 
