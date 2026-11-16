@@ -7,10 +7,12 @@
 - [x] FreeIPA JSON-RPC adapter foundation (mock-tested; live realm validation pending)
 - [x] Rocky/AlmaLinux server preflight and guided interactive installation wrapper
 - [x] FreeIPA service status health check
+- [x] Authenticated DNS zone and A/AAAA/CNAME/TXT record API (mock-tested; live DNS validation pending)
 
 ## Next
 - [ ] Execute disposable KVM/libvirt integration lab on Rocky Linux and AlmaLinux, with Ubuntu and Debian clients
 - [ ] Add end-to-end DNS, Kerberos, TLS and client-enrolment acceptance checks
+- [x] Add dashboard DNS zone and record management screens
 - [ ] Add safe backup/restore and documented recovery workflow
 - [x] Add guarded interactive Ubuntu/Debian client enrolment wrapper
 - [ ] Execute real Ubuntu/Debian client enrolment in the disposable VM lab

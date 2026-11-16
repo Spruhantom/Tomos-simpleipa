@@ -26,10 +26,10 @@ Install the native Kerberos development prerequisites first, then the optional P
 
 The adapter uses the host's Kerberos credential cache through SPNEGO and requires mutual authentication. The FreeIPA API is accessed over HTTPS with certificate verification enabled. It never accepts a directory password from the dashboard. Ensure the service runs under a dedicated, least-privilege Kerberos principal with only the required user/group permissions and a managed credential cache.
 
-If the FreeIPA URL is not configured, the API stays fail-closed with HTTP 503. The adapter supports listing and creating users and groups. User creation does not set passwords, enrol clients, assign group membership, or alter DNS/certificates. Validate the exact API behaviour against a disposable FreeIPA test domain before production use.
+If the FreeIPA URL is not configured, the API stays fail-closed with HTTP 503. The adapter supports listing and creating users and groups, DNS zones, and A/AAAA/CNAME/TXT records. DNS writes use FreeIPA JSON-RPC methods (`dnszone_add` and `dnsrecord_add`); SimpleIPA never writes LDAP or BIND files directly. DNS zone and record deletion are intentionally not available in this first increment. Validate exact API behaviour, DNSSEC defaults and returned record shapes against a disposable FreeIPA test domain before production use.
 
 ## Limitations
 
-- No live FreeIPA server was available in CI, so no real LDAP/Kerberos integration test is claimed.
+- No live FreeIPA server was available in CI, so no real LDAP/Kerberos/DNS integration test is claimed.
 - FreeIPA error responses are deliberately sanitised before returning to dashboard clients.
 - Network calls have finite timeouts and TLS verification cannot be disabled.
