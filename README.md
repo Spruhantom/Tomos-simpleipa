@@ -38,7 +38,7 @@ Install API test dependencies with `python -m pip install -e ".[test]"` and run 
 
 ## Rocky Linux / AlmaLinux server setup
 
-A guarded setup workflow is available: `simpleipa server preflight` checks the operating system, hostname, forward DNS, package manager and time synchronisation without changing the host. `simpleipa server install` requires root and explicit confirmation, installs the FreeIPA server packages, then hands over to the upstream interactive `ipa-server-install` so passwords are entered locally and never stored by SimpleIPA. `simpleipa server health` checks `ipactl status`. See [Server setup](docs/SERVER-SETUP.md). A disposable KVM/libvirt end-to-end lab for Rocky/AlmaLinux plus Ubuntu/Debian is documented in [VM integration tests](docs/VM-INTEGRATION-TESTS.md); it must be run on a Linux host with libvirt before a live-install result can be claimed.
+A guarded setup workflow is available: `simpleipa server preflight` checks Rocky/AlmaLinux prerequisites without changing the host, and `simpleipa server install` requires root and explicit confirmation before handing over to the interactive `ipa-server-install`. Ubuntu/Debian clients now have `simpleipa client preflight` and `simpleipa client enrol`; the latter installs `freeipa-client`, checks LDAP SRV discovery and launches interactive `ipa-client-install`. Credentials are entered locally and are never stored by SimpleIPA. See [Server setup](docs/SERVER-SETUP.md) and [Client enrolment](docs/CLIENT-ENROLMENT.md). A disposable KVM/libvirt end-to-end lab for Rocky/AlmaLinux plus Ubuntu/Debian is documented in [VM integration tests](docs/VM-INTEGRATION-TESTS.md); it must be run on a Linux host with libvirt before a live-install result can be claimed.
 
 ## Security boundaries
 
