@@ -2,14 +2,19 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta, timezone
 from typing import Protocol
 from uuid import uuid4
 
 import jwt
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pwdlib import PasswordHash
 from pydantic import BaseModel, Field
 
+from .api_types import (
+    DirectoryError, DirectoryUnavailable, DuplicateEntry,
+    GroupCreate, GroupRecord, UserCreate, UserRecord,
+)
 from .freeipa import FreeIPADirectory
 
 
@@ -19,38 +24,6 @@ password_hasher = PasswordHash.recommended()
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=128)
     password: str = Field(min_length=1, max_length=1024)
-
-
-class UserCreate(BaseModel):
-    username: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9._-]+$")
-    given_name: str = Field(min_length=1, max_length=128)
-    family_name: str = Field(min_length=1, max_length=128)
-    email: str | None = Field(default=None, max_length=254)
-
-
-class UserRecord(UserCreate):
-    id: str
-
-
-class GroupCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9._-]+$")
-    description: str | None = Field(default=None, max_length=512)
-
-
-class GroupRecord(GroupCreate):
-    id: str
-
-
-class DirectoryError(Exception):
-    pass
-
-
-class DirectoryUnavailable(DirectoryError):
-    pass
-
-
-class DuplicateEntry(DirectoryError):
-    pass
 
 
 class DirectoryProvider(Protocol):
@@ -114,10 +87,7 @@ def _jwt_settings() -> tuple[str, str]:
     username = os.getenv("SIMPLEIPA_ADMIN_USERNAME", "")
     password_hash = os.getenv("SIMPLEIPA_ADMIN_PASSWORD_HASH", "")
     if len(secret) < 32 or not username or not password_hash:
-        raise HTTPException(
-            status_code=503,
-            detail="Administrator authentication is not configured securely",
-        )
+        raise HTTPException(status_code=503, detail="Administrator authentication is not configured securely")
     return secret, username
 
 
@@ -128,8 +98,8 @@ def require_admin(authorization: str | None = Header(default=None)) -> Principal
         raise HTTPException(status_code=401, detail="Bearer token required")
     try:
         claims = jwt.decode(
-            token, secret, algorithms=["HS256"],
-            issuer="simpleipa", audience="simpleipa-admin",
+            token, secret, algorithms=["HS256"], issuer="simpleipa",
+            audience="simpleipa-admin",
             options={"require": ["exp", "iat", "sub", "iss", "aud"]},
         )
     except jwt.PyJWTError as exc:
@@ -138,11 +108,7 @@ def require_admin(authorization: str | None = Header(default=None)) -> Principal
 
 
 def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
-    app = FastAPI(
-        title="SimpleIPA Management API",
-        version="0.2.0",
-        description="Authenticated API; directory changes use a configured FreeIPA provider.",
-    )
+    app = FastAPI(title="SimpleIPA Management API", version="0.3.0")
     if directory is not None:
         app.state.directory = directory
     elif os.getenv("SIMPLEIPA_FREEIPA_URL"):
@@ -169,9 +135,7 @@ def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
         secret, username = _jwt_settings()
         stored_hash = os.getenv("SIMPLEIPA_ADMIN_PASSWORD_HASH", "")
         if data.username != username or not password_hasher.verify(data.password, stored_hash):
-            # Avoid disclosing whether the username or password was incorrect.
             raise HTTPException(status_code=401, detail="Invalid username or password")
-        from datetime import datetime, timedelta, timezone
         now = datetime.now(timezone.utc)
         token = jwt.encode(
             {"sub": username, "iss": "simpleipa", "aud": "simpleipa-admin",
