@@ -35,3 +35,12 @@ td { color: #dce5f2; }
 .empty { text-align: center; color: #8292aa; padding: 30px 10px; }
 .disclaimer { color: #8292aa; font-size: 11px; line-height: 1.6; }
 @media (max-width: 720px) { .shell { grid-template-columns: 1fr; } .sidebar { padding: 16px; } nav { display: flex; margin-top: 18px; } .sidebar-foot { display: none; } .content { padding: 26px 16px; } .connect { grid-template-columns: 1fr; } .connect-row { margin-top: 10px; } .table-panel { overflow-x: auto; } }
+
+.header-actions { display: flex; gap: 8px; }
+.auth-panel, .create-form { max-width: 560px; display: grid; gap: 14px; }
+.auth-panel h2, .create-form h2 { margin-bottom: 0; }
+.auth-panel > p, .create-form > p { color: #92a2b9; font-size: 13px; margin: 0; }
+.auth-panel label, .create-form label { display: grid; gap: 7px; color: #aebbd0; font-size: 12px; }
+.create-form { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; }
+.create-form h2, .create-form button { grid-column: 1 / -1; }
+@media (max-width: 720px) { .create-form { grid-template-columns: 1fr; } .create-form h2, .create-form button { grid-column: auto; } .header-actions { flex-wrap: wrap; } }
