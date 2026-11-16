@@ -1,0 +1,36 @@
+# Disposable two-VM FreeIPA integration lab.
+# Override SIMPLEIPA_TEST_SERVER_BOX with generic/alma9 to test AlmaLinux.
+# Override SIMPLEIPA_TEST_CLIENT_BOX with generic/debian12 to test Debian.
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  config.vm.define "ipa-server" do |server|
+    server.vm.box = ENV.fetch("SIMPLEIPA_TEST_SERVER_BOX", "generic/rocky9")
+    server.vm.hostname = "ipa.example.test"
+    server.vm.network "private_network", ip: "192.168.56.10"
+    server.vm.synced_folder "../../", "/simpleipa"
+    server.vm.provider "libvirt" do |lv|
+      lv.memory = 6144
+      lv.cpus = 4
+    end
+    server.vm.provision "shell", path: "scripts/server.sh", privileged: true,
+      env: {
+        "IPA_TEST_ADMIN_PASSWORD" => ENV.fetch("IPA_TEST_ADMIN_PASSWORD", "unused-outside-lab-up"),
+        "IPA_TEST_DS_PASSWORD" => ENV.fetch("IPA_TEST_DS_PASSWORD", "unused-outside-lab-up")
+      }
+  end
+
+  config.vm.define "ipa-client" do |client|
+    client.vm.box = ENV.fetch("SIMPLEIPA_TEST_CLIENT_BOX", "generic/ubuntu2204")
+    client.vm.hostname = "client.example.test"
+    client.vm.network "private_network", ip: "192.168.56.20"
+    client.vm.provider "libvirt" do |lv|
+      lv.memory = 3072
+      lv.cpus = 2
+    end
+    client.vm.provision "shell", path: "scripts/client.sh", privileged: true,
+      env: {
+        "IPA_TEST_ADMIN_PASSWORD" => ENV.fetch("IPA_TEST_ADMIN_PASSWORD")
+      }
+  end
+end
