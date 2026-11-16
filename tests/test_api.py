@@ -77,6 +77,27 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
 
 
+class FakeResponse:
+    def __init__(self, body):
+        self.body = body
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.body
+
+
+class FakeSession:
+    def __init__(self, body):
+        self.body = body
+        self.calls = []
+
+    def post(self, url, **kwargs):
+        self.calls.append((url, kwargs))
+        return FakeResponse(self.body)
+
+
 class FreeIPATests(unittest.TestCase):
     def test_rejects_plain_http(self):
         with self.assertRaises(ValueError):
@@ -85,6 +106,26 @@ class FreeIPATests(unittest.TestCase):
     def test_rejects_disabled_tls_verification(self):
         with self.assertRaises(ValueError):
             FreeIPADirectory("https://ipa.example.test", ca_bundle=False)
+
+    def test_json_rpc_uses_tls_verification_and_finite_timeout(self):
+        session = FakeSession({"result": {"result": []}})
+        adapter = FreeIPADirectory("https://ipa.example.test", session=session)
+        self.assertEqual(adapter.list_users(), [])
+        url, kwargs = session.calls[0]
+        self.assertEqual(url, "https://ipa.example.test/ipa/session/json")
+        self.assertIs(kwargs["verify"], True)
+        self.assertEqual(kwargs["timeout"], 10.0)
+        self.assertEqual(kwargs["json"]["method"], "user_find")
+
+    def test_user_results_are_mapped(self):
+        session = FakeSession({"result": {"result": [{
+            "uid": ["alex"], "givenname": ["Alex"], "sn": ["Example"],
+            "mail": ["alex@example.test"],
+        }]}})
+        adapter = FreeIPADirectory("https://ipa.example.test", session=session)
+        users = adapter.list_users()
+        self.assertEqual(users[0].username, "alex")
+        self.assertEqual(users[0].email, "alex@example.test")
 
 
 if __name__ == "__main__":
