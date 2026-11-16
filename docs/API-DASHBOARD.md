@@ -6,7 +6,7 @@ DNS routes are documented in [DNS management](DNS-MANAGEMENT.md). The initial su
 
 Directory access is provider-based. When `SIMPLEIPA_FREEIPA_URL` is configured, the application loads the FreeIPA adapter; otherwise management calls fail closed with HTTP 503. The adapter uses Kerberos SPNEGO with mutual authentication and verified HTTPS. See [FreeIPA adapter and authentication](FREEIPA-ADAPTER.md).
 
-The React/Vite dashboard currently provides administrator sign-in, read-only listings, and user/group creation forms. DNS management is available through the API; dashboard DNS screens are a follow-up task. Tokens are held in page memory only and are not persisted in browser storage.
+The React/Vite dashboard provides administrator sign-in, user/group listings and creation forms, plus a DNS tab for listing zones and records and creating zones and A/AAAA/CNAME/TXT records. Tokens are held in page memory only and are not persisted in browser storage.
 
 For API development, install `python -m pip install -e ".[test]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
 
