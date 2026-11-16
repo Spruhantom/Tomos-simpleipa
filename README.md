@@ -32,9 +32,9 @@ The planner is **dry-run only**. It does not install packages, change system con
 
 ## API and dashboard
 
-The first FastAPI management API and React/Vite dashboard foundation is under development on `feature/api-dashboard-foundation`. The API exposes versioned user/group listing and creation contracts behind a fail-closed bearer-token gate and a directory-provider interface. The default provider is intentionally unconfigured; no real FreeIPA changes are made yet. The dashboard currently provides read-only directory listings.
+The FastAPI management API and React/Vite dashboard now include administrator login, short-lived signed sessions, user/group creation screens and a Kerberos-authenticated FreeIPA JSON-RPC adapter. The adapter requires verified HTTPS and remains fail-closed when no FreeIPA URL is configured. See [FreeIPA adapter and authentication](docs/FREEIPA-ADAPTER.md) for required server configuration and remaining production safeguards.
 
-Install API test dependencies with `python -m pip install -e ".[test]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
+Install API test dependencies with `python -m pip install -e ".[test,freeipa]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
 
 ## Security boundaries
 
