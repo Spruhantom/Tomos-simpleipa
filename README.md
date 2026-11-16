@@ -36,6 +36,10 @@ The FastAPI management API and React/Vite dashboard now include administrator lo
 
 Install API test dependencies with `python -m pip install -e ".[test,freeipa]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
 
+## Rocky Linux / AlmaLinux server setup
+
+A guarded setup workflow is available: `simpleipa server preflight` checks the operating system, hostname, forward DNS, package manager and time synchronisation without changing the host. `simpleipa server install` requires root and explicit confirmation, installs the FreeIPA server packages, then hands over to the upstream interactive `ipa-server-install` so passwords are entered locally and never stored by SimpleIPA. `simpleipa server health` checks `ipactl status`. See [Server setup](docs/SERVER-SETUP.md). A live Rocky/AlmaLinux installation has not yet been validated.
+
 ## Security boundaries
 
 - Never collect or store user passwords in configuration files.
