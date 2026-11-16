@@ -16,6 +16,7 @@ from .api_types import (
     GroupCreate, GroupRecord, UserCreate, UserRecord,
 )
 from .freeipa import FreeIPADirectory
+from .dns_types import DNSRecord, DNSRecordCreate, DNSZoneCreate
 
 
 password_hasher = PasswordHash.recommended()
@@ -31,6 +32,10 @@ class DirectoryProvider(Protocol):
     def create_user(self, data: UserCreate) -> UserRecord: ...
     def list_groups(self) -> list[GroupRecord]: ...
     def create_group(self, data: GroupCreate) -> GroupRecord: ...
+    def list_dns_zones(self): ...
+    def create_dns_zone(self, name: str): ...
+    def list_dns_records(self, zone: str, name: str = "@"): ...
+    def create_dns_record(self, zone: str, data: DNSRecordCreate): ...
 
 
 class UnconfiguredDirectory:
@@ -49,6 +54,18 @@ class UnconfiguredDirectory:
     def create_group(self, data):
         self._unavailable()
 
+    def list_dns_zones(self):
+        self._unavailable()
+
+    def create_dns_zone(self, name):
+        self._unavailable()
+
+    def list_dns_records(self, zone, name="@"):
+        self._unavailable()
+
+    def create_dns_record(self, zone, data):
+        self._unavailable()
+
 
 class MemoryDirectory:
     """In-memory provider for tests only; never selected in production."""
@@ -56,6 +73,8 @@ class MemoryDirectory:
     def __init__(self):
         self.users: dict[str, UserRecord] = {}
         self.groups: dict[str, GroupRecord] = {}
+        self.dns_zones: set[str] = set()
+        self.dns_records: dict[tuple[str, str, str, str], DNSRecord] = {}
 
     def list_users(self):
         return list(self.users.values())
@@ -75,6 +94,30 @@ class MemoryDirectory:
             raise DuplicateEntry("A group with that name already exists")
         record = GroupRecord(id=str(uuid4()), **data.model_dump())
         self.groups[record.id] = record
+        return record
+
+    def list_dns_zones(self):
+        return [{"name": name} for name in sorted(self.dns_zones)]
+
+    def create_dns_zone(self, name: str):
+        if name in self.dns_zones:
+            raise DuplicateEntry("That DNS zone already exists")
+        self.dns_zones.add(name)
+        return {"name": name}
+
+    def list_dns_records(self, zone: str, name: str = "@"):
+        if zone not in self.dns_zones:
+            raise DirectoryUnavailable("DNS zone was not found")
+        return [record for (z, n, _t, _v), record in self.dns_records.items() if z == zone and n == name]
+
+    def create_dns_record(self, zone: str, data: DNSRecordCreate):
+        if zone not in self.dns_zones:
+            raise DirectoryUnavailable("DNS zone was not found")
+        key = (zone, data.name, data.record_type, data.value)
+        if key in self.dns_records:
+            raise DuplicateEntry("That DNS record already exists")
+        record = DNSRecord(name=data.name, record_type=data.record_type, value=data.value)
+        self.dns_records[key] = record
         return record
 
 
@@ -169,6 +212,34 @@ def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
     def create_group(data: GroupCreate, _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
         try:
             return db.create_group(data)
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.get("/api/v1/dns/zones")
+    def list_dns_zones(_: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.list_dns_zones()
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.post("/api/v1/dns/zones", status_code=201)
+    def create_dns_zone(data: DNSZoneCreate, _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.create_dns_zone(data.name)
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.get("/api/v1/dns/zones/{zone}/records", response_model=list[DNSRecord])
+    def list_dns_records(zone: str, name: str = "@", _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.list_dns_records(zone, name)
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.post("/api/v1/dns/zones/{zone}/records", response_model=DNSRecord, status_code=201)
+    def create_dns_record(zone: str, data: DNSRecordCreate, _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.create_dns_record(zone, data)
         except DirectoryError as exc:
             map_directory_error(exc)
 
