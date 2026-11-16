@@ -1,37 +1,21 @@
 # Roadmap
 
-## Phase 0 — Foundation
-- [x] Feature registry
-- [x] Dependency-aware configuration planner
-- [x] Platform/role validation
-- [x] Dry-run CLI
-- [x] Unit tests
-- [ ] CI workflow
-- [ ] API contract and dashboard skeleton
+## Foundation
+- [x] Feature registry and dependency-aware dry-run planner
+- [x] FastAPI and React dashboard foundation
+- [x] Authenticated user/group management API boundary
+- [x] FreeIPA JSON-RPC adapter foundation (mock-tested; live realm validation pending)
+- [x] Rocky/AlmaLinux server preflight and guided interactive installation wrapper
+- [x] FreeIPA service status health check
 
-## Phase 1 — Server integration
-- [ ] Rocky Linux deployment adapter
-- [ ] AlmaLinux deployment adapter
-- [ ] Prerequisite checks and safe installation report
-- [ ] FreeIPA health checks
+## Next
+- [ ] Test installation on clean Rocky Linux and AlmaLinux virtual machines
+- [ ] Add end-to-end DNS, Kerberos, TLS and client-enrolment acceptance checks
+- [ ] Add safe backup/restore and documented recovery workflow
+- [ ] Add Ubuntu/Debian client enrolment workflow
+- [ ] Add multi-administrator RBAC, audit trail and production session hardening
+- [ ] Add replica and upgrade workflows
 
-## Phase 2 — Client integration
-- [ ] Ubuntu client adapter
-- [ ] Debian client adapter
-- [ ] Enrolment flow and recovery tests
-
-## Phase 3 — Management
-- [ ] Users/groups API
-- [ ] DNS API
-- [ ] Certificate API
-- [ ] SSH key and sudo policy API
-
-## Phase 4 — SMB
-- [ ] SMB client setup
-- [ ] Samba domain-member integration
-- [ ] Share permission and Kerberos integration tests
-
-## Phase 5 — UX
-- [ ] Server setup wizard
-- [ ] Client installer
-- [ ] Simplified dashboard
+## Optional
+- [ ] SMB client access
+- [ ] Samba file-server domain-member integration
