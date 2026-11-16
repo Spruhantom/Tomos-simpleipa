@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -116,7 +117,7 @@ def main(argv=None):
             return _print_checks(server_health())
 
     except (OSError, json.JSONDecodeError, ConfigurationError, ValueError,
-            RuntimeError, PermissionError) as exc:
+            RuntimeError, PermissionError, subprocess.SubprocessError) as exc:
         print(f"simpleipa: error: {exc}", file=sys.stderr)
         return 2
     return 2
