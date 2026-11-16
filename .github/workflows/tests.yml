@@ -35,3 +35,18 @@ jobs:
       - name: Build dashboard
         working-directory: dashboard
         run: npm run build
+
+  vm-lab-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+      - name: Validate Vagrantfile syntax
+        run: ruby -c tests/vm-lab/Vagrantfile
+      - name: Validate VM provisioning scripts
+        run: |
+          bash -n tests/vm-lab/run.sh
+          bash -n tests/vm-lab/scripts/server.sh
+          bash -n tests/vm-lab/scripts/client.sh
