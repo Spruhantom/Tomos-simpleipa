@@ -1,0 +1,9 @@
+{
+  "role": "client",
+  "platform": "ubuntu",
+  "features": [
+    "linux_clients",
+    "ssh_keys",
+    "sudo_rules"
+  ]
+}
