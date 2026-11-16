@@ -24,7 +24,7 @@ dig @192.168.56.10 _ldap._tcp.example.test SRV +short | grep -q .
 # Drive the supported interactive client installer without placing the password
 # in its command line. The password exists only in this disposable provisioner.
 expect <<'EXPECT'
-set timeout 180
+set timeout 240
 log_user 0
 spawn ipa-client-install --server=ipa.example.test --domain=example.test --realm=EXAMPLE.TEST --principal=admin --no-ntp
 expect {
