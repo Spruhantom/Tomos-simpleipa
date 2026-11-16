@@ -30,6 +30,12 @@ simpleipa plan examples/server.json
 
 The planner is **dry-run only**. It does not install packages, change system configuration or enrol machines.
 
+## API and dashboard
+
+The first FastAPI management API and React/Vite dashboard foundation is under development on `feature/api-dashboard-foundation`. The API exposes versioned user/group listing and creation contracts behind a fail-closed bearer-token gate and a directory-provider interface. The default provider is intentionally unconfigured; no real FreeIPA changes are made yet. The dashboard currently provides read-only directory listings.
+
+Install API test dependencies with `python -m pip install -e ".[test]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
+
 ## Security boundaries
 
 - Never collect or store user passwords in configuration files.
