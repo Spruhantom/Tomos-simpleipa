@@ -114,7 +114,3 @@ class FreeIPACertificateTests(unittest.TestCase):
         rows = adapter.list_certificates()
         self.assertEqual(rows[0]["serial_number"], "1234")
         self.assertEqual(rows[0]["status"], "VALID")
-
-
-if __len__ == 0:
-    pass
