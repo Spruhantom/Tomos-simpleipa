@@ -35,5 +35,7 @@ klist
 dig @127.0.0.1 _ldap._tcp.example.test SRV +short | grep -q .
 ipa ca-show ipa
 ipa user-show admin
+ipa dnszone-show example.test
+ipa dnsrecord-show example.test client >/dev/null 2>&1 || ipa dnsrecord-add example.test client --a-rec=192.168.56.20
 ipa user-show vm-lab-user >/dev/null 2>&1 || ipa user-add vm-lab-user --first=VM --last=Integration
 simpleipa server health
