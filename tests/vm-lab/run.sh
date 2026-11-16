@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LAB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$LAB_DIR"
 
 if ! command -v vagrant >/dev/null || ! vagrant plugin list | grep -q vagrant-libvirt; then
   echo "Install Vagrant and the vagrant-libvirt provider first." >&2
+  exit 2
+fi
+if ! command -v openssl >/dev/null; then
+  echo "openssl is required to generate disposable lab credentials." >&2
   exit 2
 fi
 
