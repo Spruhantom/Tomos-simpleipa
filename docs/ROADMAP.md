@@ -9,7 +9,7 @@
 - [x] FreeIPA service status health check
 
 ## Next
-- [ ] Test installation on clean Rocky Linux and AlmaLinux virtual machines
+- [ ] Execute disposable KVM/libvirt integration lab on Rocky Linux and AlmaLinux, with Ubuntu and Debian clients
 - [ ] Add end-to-end DNS, Kerberos, TLS and client-enrolment acceptance checks
 - [ ] Add safe backup/restore and documented recovery workflow
 - [ ] Add Ubuntu/Debian client enrolment workflow
