@@ -12,7 +12,8 @@
 - [ ] Execute disposable KVM/libvirt integration lab on Rocky Linux and AlmaLinux, with Ubuntu and Debian clients
 - [ ] Add end-to-end DNS, Kerberos, TLS and client-enrolment acceptance checks
 - [ ] Add safe backup/restore and documented recovery workflow
-- [ ] Add Ubuntu/Debian client enrolment workflow
+- [x] Add guarded interactive Ubuntu/Debian client enrolment wrapper
+- [ ] Execute real Ubuntu/Debian client enrolment in the disposable VM lab
 - [ ] Add multi-administrator RBAC, audit trail and production session hardening
 - [ ] Add replica and upgrade workflows
 
