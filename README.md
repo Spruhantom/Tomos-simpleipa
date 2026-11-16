@@ -32,7 +32,7 @@ The planner is **dry-run only**. It does not install packages, change system con
 
 ## API and dashboard
 
-The FastAPI management API and React/Vite dashboard now include administrator login, short-lived signed sessions, user/group management, DNS zone and record management, and a Kerberos-authenticated FreeIPA JSON-RPC adapter. The adapter requires verified HTTPS and remains fail-closed when no FreeIPA URL is configured. See [FreeIPA adapter and authentication](docs/FREEIPA-ADAPTER.md) and [DNS management](docs/DNS-MANAGEMENT.md) for configuration, supported record types and remaining production safeguards.
+The FastAPI management API and React/Vite dashboard now include administrator login, short-lived signed sessions, user/group management, DNS zone and record management, certificate inventory and CSR submission, and a Kerberos-authenticated FreeIPA JSON-RPC adapter. The adapter requires verified HTTPS and remains fail-closed when no FreeIPA URL is configured. See [FreeIPA adapter and authentication](docs/FREEIPA-ADAPTER.md), [DNS management](docs/DNS-MANAGEMENT.md) and [Certificate management](docs/CERTIFICATE-MANAGEMENT.md) for configuration, supported record types and remaining production safeguards.
 
 Install API test dependencies with `python -m pip install -e ".[test]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
 

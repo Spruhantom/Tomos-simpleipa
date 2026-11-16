@@ -134,3 +134,38 @@ class FreeIPADirectory:
         option = fields[data.record_type]
         self._call("dnsrecord_add", [zone, data.name], {option: data.value})
         return {"name": data.name, "record_type": data.record_type, "value": data.value}
+
+
+    @staticmethod
+    def _certificate_row(entry):
+        def first(name):
+            value = entry.get(name)
+            return FreeIPADirectory._first(value)
+        return {
+            "serial_number": str(first("serial_number") or first("serialnumber") or ""),
+            "subject": first("subject"),
+            "principal": first("principal"),
+            "status": first("status"),
+            "issued_on": first("not_before"),
+            "expires_on": first("not_after"),
+        }
+
+    def list_certificates(self):
+        result = self._call("cert_find", [], {"sizelimit": 0})
+        # FreeIPA wraps cert-find rows in {count, truncated, result}; keep
+        # compatibility with versions returning the row list directly.
+        entries = result.get("result", []) if isinstance(result, dict) else result
+        if not isinstance(entries, list):
+            raise DirectoryUnavailable("FreeIPA returned an unexpected certificate list")
+        return [self._certificate_row(entry) for entry in entries]
+
+    def request_certificate(self, data):
+        result = self._call("cert_request", [data.csr], {"principal": data.principal})
+        if not isinstance(result, dict):
+            raise DirectoryUnavailable("FreeIPA returned an unexpected certificate response")
+        return {
+            "serial_number": str(self._first(result.get("serial_number")) or ""),
+            "request_id": self._first(result.get("request_id")),
+            "subject": self._first(result.get("subject")),
+            "certificate": self._first(result.get("certificate")),
+        }

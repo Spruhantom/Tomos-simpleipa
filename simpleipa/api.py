@@ -17,6 +17,7 @@ from .api_types import (
 )
 from .freeipa import FreeIPADirectory
 from .dns_types import DNSRecord, DNSRecordCreate, DNSZoneCreate
+from .certificate_types import CertificateRecord, CertificateRequest, CertificateRequestResult
 
 
 password_hasher = PasswordHash.recommended()
@@ -36,6 +37,8 @@ class DirectoryProvider(Protocol):
     def create_dns_zone(self, name: str): ...
     def list_dns_records(self, zone: str, name: str = "@"): ...
     def create_dns_record(self, zone: str, data: DNSRecordCreate): ...
+    def list_certificates(self) -> list[CertificateRecord]: ...
+    def request_certificate(self, data: CertificateRequest) -> CertificateRequestResult: ...
 
 
 class UnconfiguredDirectory:
@@ -66,6 +69,12 @@ class UnconfiguredDirectory:
     def create_dns_record(self, zone, data):
         self._unavailable()
 
+    def list_certificates(self):
+        self._unavailable()
+
+    def request_certificate(self, data):
+        self._unavailable()
+
 
 class MemoryDirectory:
     """In-memory provider for tests only; never selected in production."""
@@ -75,6 +84,7 @@ class MemoryDirectory:
         self.groups: dict[str, GroupRecord] = {}
         self.dns_zones: set[str] = set()
         self.dns_records: dict[tuple[str, str, str, str], DNSRecord] = {}
+        self.certificates: dict[str, CertificateRecord] = {}
 
     def list_users(self):
         return list(self.users.values())
@@ -119,6 +129,19 @@ class MemoryDirectory:
         record = DNSRecord(name=data.name, record_type=data.record_type, value=data.value)
         self.dns_records[key] = record
         return record
+
+    def list_certificates(self):
+        return list(self.certificates.values())
+
+    def request_certificate(self, data: CertificateRequest):
+        # Test provider only: a stable fake serial makes API behaviour testable.
+        serial = str(1001 + len(self.certificates))
+        record = CertificateRecord(
+            serial_number=serial, subject=f"CSR for {data.principal}",
+            principal=data.principal, status="REQUESTED",
+        )
+        self.certificates[serial] = record
+        return {"serial_number": serial, "request_id": None, "subject": record.subject, "certificate": None}
 
 
 class Principal(BaseModel):
@@ -240,6 +263,20 @@ def create_app(directory: DirectoryProvider | None = None) -> FastAPI:
     def create_dns_record(zone: str, data: DNSRecordCreate, _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
         try:
             return db.create_dns_record(zone, data)
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.get("/api/v1/certificates", response_model=list[CertificateRecord])
+    def list_certificates(_: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.list_certificates()
+        except DirectoryError as exc:
+            map_directory_error(exc)
+
+    @app.post("/api/v1/certificates/requests", response_model=CertificateRequestResult, status_code=201)
+    def request_certificate(data: CertificateRequest, _: Principal = Depends(require_admin), db: DirectoryProvider = Depends(get_directory)):
+        try:
+            return db.request_certificate(data)
         except DirectoryError as exc:
             map_directory_error(exc)
 

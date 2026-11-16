@@ -8,6 +8,8 @@
 - [x] Rocky/AlmaLinux server preflight and guided interactive installation wrapper
 - [x] FreeIPA service status health check
 - [x] Authenticated DNS zone and A/AAAA/CNAME/TXT record API (mock-tested; live DNS validation pending)
+- [x] Authenticated Dogtag certificate inventory and CSR request API (mock-tested; live CA validation pending)
+- [x] Dashboard certificate request and inventory screens
 
 ## Next
 - [ ] Execute disposable KVM/libvirt integration lab on Rocky Linux and AlmaLinux, with Ubuntu and Debian clients
