@@ -12,7 +12,7 @@ systemctl enable --now chronyd
 chronyc waitsync 60 0.1
 
 # SimpleIPA requires Python 3.11+, while EL9's system Python may be older.
-python3.11 -m pip install --disable-pip-version-check /vagrant
+python3.11 -m pip install --disable-pip-version-check /simpleipa
 
 # Exercise SimpleIPA's non-destructive host preflight before installing IPA.
 simpleipa server preflight --hostname ipa.example.test --domain example.test --realm EXAMPLE.TEST
