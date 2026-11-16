@@ -7,9 +7,12 @@ set -Eeuo pipefail
 hostnamectl set-hostname ipa.example.test
 grep -q 'ipa.example.test' /etc/hosts || echo '192.168.56.10 ipa.example.test ipa' >> /etc/hosts
 
-dnf -y install ipa-server ipa-server-dns chrony bind-utils python3 python3-pip
+dnf -y install ipa-server ipa-server-dns chrony bind-utils python3.11 python3.11-pip
 systemctl enable --now chronyd
-python3 -m pip install --disable-pip-version-check /vagrant
+chronyc waitsync 60 0.1
+
+# SimpleIPA requires Python 3.11+, while EL9's system Python may be older.
+python3.11 -m pip install --disable-pip-version-check /vagrant
 
 # Exercise SimpleIPA's non-destructive host preflight before installing IPA.
 simpleipa server preflight --hostname ipa.example.test --domain example.test --realm EXAMPLE.TEST
@@ -32,5 +35,5 @@ klist
 dig @127.0.0.1 _ldap._tcp.example.test SRV +short | grep -q .
 ipa ca-show ipa
 ipa user-show admin
-ipa user-add vm-lab-user --first=VM --last=Integration
+ipa user-show vm-lab-user >/dev/null 2>&1 || ipa user-add vm-lab-user --first=VM --last=Integration
 simpleipa server health
