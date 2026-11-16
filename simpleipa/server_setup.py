@@ -130,6 +130,7 @@ def install_server(
     preflight_checks: Sequence[Check] | None = None,
 ) -> None:
     """Install packages and hand over to FreeIPA's interactive installer."""
+    validate_config(config)
     if not confirm:
         raise RuntimeError("Installation requires explicit operator confirmation")
     if (os.geteuid() if euid is None else euid) != 0:
