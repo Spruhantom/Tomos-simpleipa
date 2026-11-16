@@ -19,7 +19,7 @@ This is a single local bootstrap administrator, not yet a multi-user RBAC/SSO sy
 
 ## FreeIPA connection
 
-Install optional dependencies with `python -m pip install -e ".[freeipa]"`. Configure:
+Install the native Kerberos development prerequisites first, then the optional Python dependencies. On Rocky Linux/AlmaLinux use `sudo dnf install krb5-devel gcc python3-devel`; on Ubuntu/Debian use `sudo apt install libkrb5-dev gcc python3-dev`. Then run `python -m pip install -e ".[freeipa]"`. Configure:
 - `SIMPLEIPA_FREEIPA_URL=https://ipa.example.test`
 - `SIMPLEIPA_FREEIPA_CA_BUNDLE=/path/to/ca-chain.pem` (optional; system trust is used otherwise)
 - `SIMPLEIPA_TIMEOUT=10` (optional)

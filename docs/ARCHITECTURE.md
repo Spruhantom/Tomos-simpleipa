@@ -5,9 +5,9 @@ SimpleIPA is an orchestration and usability layer around FreeIPA, not a replacem
 
 ## Components
 1. Configuration engine: validates desired state, resolves feature dependencies and emits dry-run plans.
-2. Server adapter: invokes supported FreeIPA deployment and management interfaces on Rocky/AlmaLinux.
+2. Server adapter: guarded Rocky/AlmaLinux preflight and guided invocation of the supported FreeIPA installer.
 3. Client adapter: configures supported Ubuntu/Debian IPA clients using distribution packages and SSSD.
-4. API: authenticated, authorised management boundary for the dashboard.
+4. API: authenticated management boundary for the dashboard.
 5. Dashboard: React/TypeScript UI; must call the API, never manipulate LDAP directly.
 6. SMB adapter: separate client and Samba domain-member workflows; no assumption that FreeIPA is an AD DC.
 
@@ -20,6 +20,9 @@ SimpleIPA is an orchestration and usability layer around FreeIPA, not a replacem
 - Sudo policy management
 
 SMB client and Samba file-server integration remain optional modules.
+
+## Server installation lifecycle
+Prepare host -> preflight OS/hostname/DNS/time/package manager -> explicit operator confirmation -> install distribution packages -> run upstream interactive `ipa-server-install` -> inspect `ipactl status`. No passwords are accepted by SimpleIPA, and no unattended installer mode is used.
 
 ## Execution lifecycle
 Discover -> validate -> resolve dependencies -> dry-run -> explicit approval -> backup -> apply -> health-check -> audit.

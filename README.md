@@ -34,7 +34,11 @@ The planner is **dry-run only**. It does not install packages, change system con
 
 The FastAPI management API and React/Vite dashboard now include administrator login, short-lived signed sessions, user/group creation screens and a Kerberos-authenticated FreeIPA JSON-RPC adapter. The adapter requires verified HTTPS and remains fail-closed when no FreeIPA URL is configured. See [FreeIPA adapter and authentication](docs/FREEIPA-ADAPTER.md) for required server configuration and remaining production safeguards.
 
-Install API test dependencies with `python -m pip install -e ".[test,freeipa]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
+Install API test dependencies with `python -m pip install -e ".[test]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
+
+## Rocky Linux / AlmaLinux server setup
+
+A guarded setup workflow is available: `simpleipa server preflight` checks the operating system, hostname, forward DNS, package manager and time synchronisation without changing the host. `simpleipa server install` requires root and explicit confirmation, installs the FreeIPA server packages, then hands over to the upstream interactive `ipa-server-install` so passwords are entered locally and never stored by SimpleIPA. `simpleipa server health` checks `ipactl status`. See [Server setup](docs/SERVER-SETUP.md). A live Rocky/AlmaLinux installation has not yet been validated.
 
 ## Security boundaries
 
