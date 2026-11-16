@@ -105,3 +105,32 @@ class FreeIPADirectory:
             options["description"] = data.description
         self._call("group_add", [data.name], options)
         return GroupRecord(id=data.name, name=data.name, description=data.description)
+
+
+    def list_dns_zones(self):
+        entries = self._call("dnszone_find", [], {"sizelimit": 0})
+        return [{"name": str(self._first(e.get("idnsname")))} for e in entries]
+
+    def create_dns_zone(self, name: str):
+        self._call("dnszone_add", [name], {})
+        return {"name": name}
+
+    def list_dns_records(self, zone: str, name: str = "@"):
+        entries = self._call("dnsrecord_find", [zone, name], {"sizelimit": 0})
+        records = []
+        fields = {"A": "arecord", "AAAA": "aaaarecord", "CNAME": "cnamerecord", "TXT": "txtrecord"}
+        for entry in entries:
+            record_name = str(self._first(entry.get("idnsname")) or name)
+            for record_type, field in fields.items():
+                values = entry.get(field, [])
+                if not isinstance(values, list):
+                    values = [values]
+                for value in values:
+                    records.append({"name": record_name, "record_type": record_type, "value": str(value)})
+        return records
+
+    def create_dns_record(self, zone: str, data):
+        fields = {"A": "a_rec", "AAAA": "aaaa_rec", "CNAME": "cname_rec", "TXT": "txt_rec"}
+        option = fields[data.record_type]
+        self._call("dnsrecord_add", [zone, data.name], {option: data.value})
+        return {"name": data.name, "record_type": data.record_type, "value": data.value}
