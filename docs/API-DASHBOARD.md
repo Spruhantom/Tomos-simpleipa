@@ -1,0 +1,11 @@
+# API and dashboard
+
+The API exposes `GET /health`, `POST /api/v1/auth/login`, and authenticated user/group list and create endpoints. Administrator login uses a configured username, an Argon2id password hash and a 32+ character JWT signing secret. The API issues 15-minute signed bearer tokens and validates signature, issuer, audience and expiry.
+
+Directory access is provider-based. When `SIMPLEIPA_FREEIPA_URL` is configured, the application loads the FreeIPA adapter; otherwise management calls fail closed with HTTP 503. The adapter uses Kerberos SPNEGO with mutual authentication and verified HTTPS. See [FreeIPA adapter and authentication](FREEIPA-ADAPTER.md).
+
+The React/Vite dashboard provides administrator sign-in, read-only listings, and user/group creation forms. Tokens are held in page memory only and are not persisted in browser storage. The dashboard does not expose password changes, group membership assignment, DNS, certificate or client-enrolment operations yet.
+
+For API development, install `python -m pip install -e ".[test,freeipa]"` and run `python -m unittest discover -s tests -v`. For the dashboard, run `cd dashboard && npm install && npm run dev`.
+
+This is an initial single-administrator authentication model, not yet a multi-user RBAC/SSO system. Deploy only behind TLS, add login rate limiting at the reverse proxy, protect secrets with a host secret manager, and complete production audit logging before wider deployment.
